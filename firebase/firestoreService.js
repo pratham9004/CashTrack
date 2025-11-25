@@ -748,3 +748,46 @@ export const getCategoriesRealtime = (type, callback) => {
     console.error('Error listening to categories:', error);
   });
 };
+
+// Get transactions by category and type
+export const getTransactionsByCategory = async (type, category) => {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+
+  let collectionName;
+  switch (type) {
+    case 'income':
+      collectionName = 'income';
+      break;
+    case 'expense':
+      collectionName = 'expenses';
+      break;
+    case 'saving':
+      collectionName = 'savings';
+      break;
+    default:
+      throw new Error('Invalid transaction type');
+  }
+
+  // Normalize category for querying
+  const normalizedCategory = category.trim().toLowerCase();
+
+  try {
+    // Adjust query to check normalized category field (stored normalized category)
+    const q = query(
+      collection(db, 'users', userId, collectionName),
+      orderBy('timestamp', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    // Filter client-side by normalized category match to overcome Firestore where case sensitivity
+    const filtered = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const docCategory = data.category ? data.category.trim().toLowerCase() : '';
+      return { id: doc.id, ...data, _categoryNormalized: docCategory };
+    }).filter(doc => doc._categoryNormalized === normalizedCategory);
+    return filtered;
+  } catch (error) {
+    console.error('Error getting transactions by category:', error);
+    throw error;
+  }
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity, RefreshControl, Dimensions } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { useSettings } from '../contexts/SettingsContext';
 import CustomButton from '../components/CustomButton';
 import { generateInsights } from '../utils/insights';
+import PieChartComponent from '../components/PieChartComponent';
 
 export default function Dashboard() {
   const { getThemeColors } = useSettings();
@@ -285,43 +286,20 @@ export default function Dashboard() {
           <Text style={[styles.cardTitle, { color: theme.textColor }]}>Financial Overview</Text>
           <ErrorBoundary>
             <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 10 }}>
-              <PieChart
+              <PieChartComponent
                 data={[
-                  {
-                    name: 'Income',
-                    amount: safeTotalIncome,
-                    color: '#34A853',
-                    legendFontColor: theme.textColor,
-                    legendFontSize: 13,
-                  },
-                  {
-                    name: 'Expenses',
-                    amount: safeTotalExpenses,
-                    color: '#EA4335',
-                    legendFontColor: theme.textColor,
-                    legendFontSize: 13,
-                  },
-                  {
-                    name: 'Savings',
-                    amount: safeTotalSavings,
-                    color: '#4285F4',
-                    legendFontColor: theme.textColor,
-                    legendFontSize: 13,
-                  },
+                  { name: 'Income', amount: safeTotalIncome, color: '#228B22' },
+                  { name: 'Expenses', amount: safeTotalExpenses, color: '#FF6B6B' },
+                  { name: 'Savings', amount: safeTotalSavings, color: '#4285F4' },
                 ].filter(item => item.amount > 0)}
-                width={Dimensions.get('window').width - 80}
-                height={170}
-                chartConfig={{
-                  backgroundColor: theme.cardBackgroundColor,
-                  backgroundGradientFrom: theme.cardBackgroundColor,
-                  backgroundGradientTo: theme.cardBackgroundColor,
-                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  style: { borderRadius: 16 },
+                onCategoryPress={(category) => {
+                  let type;
+                  if (category === 'Income') type = 'income';
+                  else if (category === 'Expenses') type = 'expense';
+                  else if (category === 'Savings') type = 'saving';
+                  else type = 'unknown';
+                  navigation.navigate('CategoryTransactions', { category, type });
                 }}
-                accessor="amount"
-                backgroundColor="transparent"
-                paddingLeft="0"
-                absolute
               />
             </View>
           </ErrorBoundary>

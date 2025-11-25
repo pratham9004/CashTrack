@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
-import { PieChart } from 'react-native-chart-kit';
+import PieChartComponent from '../components/PieChartComponent';
+import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import CustomButton from '../components/CustomButton';
 import InputField from '../components/InputField';
@@ -11,6 +12,7 @@ import { formatCurrency } from '../utils/helpers';
 import { useSettings } from '../contexts/SettingsContext';
 
 export default function Expenses() {
+  const navigation = useNavigation();
   const { getThemeColors } = useSettings();
   const theme = getThemeColors();
   const [expenseEntries, setExpenseEntries] = useState([]);
@@ -246,20 +248,22 @@ export default function Expenses() {
         <View style={[styles.card, { backgroundColor: theme.cardBackgroundColor, shadowColor: theme.textColor }]}>
           <Text style={[styles.cardTitle, { color: theme.textColor }]}>Expense Breakdown</Text>
           {pieData.length > 0 ? (
-            <PieChart
-              data={pieData}
-              width={300}
-              height={200}
-              chartConfig={{
-                backgroundColor: theme.cardBackgroundColor,
-                backgroundGradientFrom: theme.cardBackgroundColor,
-                backgroundGradientTo: theme.cardBackgroundColor,
-                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              }}
-              accessor="amount"
-              backgroundColor="transparent"
-              paddingLeft="15"
-              style={styles.chart}
+            <PieChartComponent
+              data={(() => {
+                const grouped = expenseEntries.reduce((acc, item) => {
+                  if (item.category) {
+                    acc[item.category] = (acc[item.category] || 0) + item.amount;
+                  }
+                  return acc;
+                }, {});
+                const colors = ['#FF6B6B', '#FFE66D', '#4472CA', '#E94560', '#6BCB77', '#4D96FF'];
+                return Object.entries(grouped).map(([name, amount], index) => ({
+                  name,
+                  amount,
+                  color: colors[index % colors.length],
+                }));
+              })()}
+              onCategoryPress={(category) => navigation.navigate('CategoryTransactions', { category, type: 'expense' })}
             />
           ) : (
             <Text style={[styles.noDataText, { color: theme.secondaryTextColor }]}>No expense data to display</Text>

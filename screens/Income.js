@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
 import CustomButton from '../components/CustomButton';
 import InputField from '../components/InputField';
+import PieChartComponent from '../components/PieChartComponent';
 import { getIncome, addIncome, updateIncome, deleteIncome, getIncomeRealtime, getCategories, addCategory, updateCategory, deleteCategory, getCategoriesRealtime } from '../firebase/firestoreService';
 import { formatCurrency } from '../utils/helpers';
 import { useSettings } from '../contexts/SettingsContext';
 
+
 export default function Income() {
+  const navigation = useNavigation();
   const { getThemeColors } = useSettings();
   const theme = getThemeColors();
   const [incomeEntries, setIncomeEntries] = useState([]);
@@ -257,6 +261,29 @@ export default function Income() {
             <Text style={styles.summaryIcon}>📈</Text>
           </View>
         </View>
+
+        {/* Income Pie Chart */}
+        <PieChartComponent
+          data={(() => {
+            const grouped = incomeEntries.reduce((acc, item) => {
+              if (item.category) {
+                acc[item.category] = (acc[item.category] || 0) + item.amount;
+              }
+              return acc;
+            }, {});
+            const colors = ['#228B22', '#4ECDC4', '#45B7D1', '#96CEB4', '#A4DE02', '#FF9F1C'];
+            return Object.entries(grouped).map(([name, amount], index) => ({
+              name,
+              amount,
+              color: colors[index % colors.length],
+            }));
+          })()}
+          onCategoryPress={(category) => {
+            const normalizedCategory = category.trim();
+            console.log('Navigating to CategoryTransactions with category:', normalizedCategory);
+            navigation.navigate('CategoryTransactions', { category: normalizedCategory, type: 'income' });
+          }}
+        />
 
         {/* Income Trend Chart */}
         <View style={[styles.card, { backgroundColor: theme.cardBackgroundColor, shadowColor: theme.textColor }]}>

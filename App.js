@@ -6,7 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { View, StyleSheet } from 'react-native';
 import { auth } from './firebase/firebaseConfig';
 import Auth from './screens/Auth';
-import BottomTabNavigator from './navigation/BottomTabNavigator';
+import MainAppStack from './navigation/MainAppStack';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 
 const Stack = createStackNavigator();
@@ -34,7 +34,7 @@ function AppContent() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <Stack.Screen name="MainApp" component={BottomTabNavigator} />
+          <Stack.Screen name="MainApp" component={MainAppStack} />
         ) : (
           <Stack.Screen name="Auth" component={Auth} />
         )}
